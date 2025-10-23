@@ -1,0 +1,125 @@
+{
+  "name": "electronics-store-inventory",
+  "productName": "Electronics Store Inventory",
+  "version": "1.0.0",
+  "main": "main.js",
+  "homepage": "./",
+  "scripts": {
+    "start": "electron .",
+    "dev": "electron . --inspect",
+    "build": "electron-builder",
+    "build-win": "electron-builder --win",
+    "build-mac": "electron-builder --mac",
+    "build-linux": "electron-builder --linux",
+    "dist": "npm run build",
+    "pack": "electron-builder --dir",
+    "install-deps": "npm install",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "test:integration": "jest --testPathPattern=integration",
+    "test:unit": "jest --testPathPattern=unit"
+  },
+  "engines": {
+    "node": ">=18.20.8"
+  },
+  "dependencies": {
+    "html5-qrcode": "^2.3.8",
+    "jsbarcode": "^3.11.5",
+    "jspdf": "^2.5.1",
+    "jspdf-autotable": "^3.6.0",
+    "qrcode": "^1.5.3",
+    "uuid": "^9.0.1",
+    "xlsx": "^0.18.5"
+  },
+  "devDependencies": {
+    "@testing-library/jest-dom": "^6.1.4",
+    "electron": "^22.3.27",
+    "electron-builder": "^24.13.3",
+    "jest": "^29.7.0",
+    "spectron": "^19.0.0",
+    "sqlite3": "^5.1.7"
+  },
+  "build": {
+    "appId": "com.electronicsstore.inventory",
+    "productName": "Electronics Store Inventory",
+    "electronVersion": "22.3.27",
+    "compression": "normal",
+    "nodeGypRebuild": false,
+    "buildDependenciesFromSource": false,
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "main.js",
+      "preload.js", 
+      "index.html",
+      "renderer.js",
+      "styles.css",
+      "database.js",
+      "assets/**/*"
+    ],
+    "extraResources": [
+      {
+        "from": "assets/",
+        "to": "assets/",
+        "filter": [
+          "**/*"
+        ]
+      }
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "requestedExecutionLevel": "asInvoker",
+      "artifactName": "${productName}-${version}-${arch}.${ext}"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Electronics Store Inventory",
+      "include": "installer.nsh"
+    },
+    "portable": {
+      "artifactName": "${productName}-${version}-portable.${ext}"
+    },
+    "mac": {
+      "target": "dmg",
+      "category": "public.app-category.business"
+    },
+    "linux": {
+      "target": [
+        "AppImage",
+        "deb"
+      ],
+      "category": "Office"
+    }
+  },
+  "description": "Modern electronics store inventory management desktop application with barcode scanning, reporting, and multi-location support",
+  "author": {
+    "name": "Electronics Store Team",
+    "email": "support@electronicsstore.com"
+  },
+  "license": "MIT",
+  "keywords": [
+    "inventory",
+    "electronics",
+    "pos",
+    "barcode",
+    "retail"
+  ]
+}

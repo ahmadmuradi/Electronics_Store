@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Electronics Store - Inventory Management</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+</head>
+<body>
+    <div class="container fade-in">
+        <h1>Electronics Store Inventory Management</h1>
+
+        <!-- Navigation Tabs -->
+        <nav>
+            <button id="dashboard-tab" class="tab">Dashboard</button>
+            <button id="inventory-tab" class="tab active">Inventory</button>
+            <button id="customers-tab" class="tab">Customers</button>
+            <button id="suppliers-tab" class="tab">Suppliers</button>
+            <button id="pos-tab" class="tab">Point of Sale</button>
+            <button id="reports-tab" class="tab">Reports</button>
+            <button id="advanced-tab" class="tab">Advanced</button>
+        </nav>
+
+    <!-- Dashboard Section -->
+    <div id="dashboard-section" style="display: none;">
+        <section>
+            <h2>📊 Dashboard Overview</h2>
+            <div class="dashboard-grid">
+                <div class="dashboard-card">
+                    <h3>Quick Stats</h3>
+                    <table class="stats-table">
+                        <tr><td>Total Products:</td><td id="dash-total-products">-</td></tr>
+                        <tr><td>Low Stock Items:</td><td id="dash-low-stock">-</td></tr>
+                        <tr><td>Total Customers:</td><td id="dash-total-customers">-</td></tr>
+                        <tr><td>Active Suppliers:</td><td id="dash-total-suppliers">-</td></tr>
+                    </table>
+                </div>
+                <div class="dashboard-card">
+                    <h3>Recent Activity</h3>
+                    <div id="recent-activity">
+                        <p>Loading recent activity...</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Inventory Section -->
+    <div id="inventory-section">
+        <!-- Add Product Form -->
+        <section>
+            <h2>Add New Product</h2>
+            <form id="add-product-form">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="product-name">Name:</label>
+                        <input type="text" id="product-name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="product-sku">SKU:</label>
+                        <input type="text" id="product-sku">
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="product-barcode">Barcode:</label>
+                        <div class="barcode-input-group">
+                            <input type="text" id="product-barcode" placeholder="Scan or enter barcode">
+                            <button type="button" id="generate-barcode-btn" class="btn-secondary">Generate</button>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="product-category">Category:</label>
+                        <select id="product-category">
+                            <option value="">Select Category</option>
+                            <option value="smartphones">Smartphones</option>
+                            <option value="laptops">Laptops</option>
+                            <option value="tablets">Tablets</option>
+                            <option value="accessories">Accessories</option>
+                            <option value="audio">Audio</option>
+                            <option value="gaming">Gaming</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="product-cost">Cost Price:</label>
+                        <input type="number" id="product-cost" step="0.01" min="0">
+                    </div>
+                    <div class="form-group">
+                        <label for="product-price">Sale Price:</label>
+                        <input type="number" id="product-price" step="0.01" required>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="product-stock">Stock Quantity:</label>
+                        <input type="number" id="product-stock" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="product-min-stock">Min Stock Level:</label>
+                        <input type="number" id="product-min-stock" value="10">
+                    </div>
+                </div>
+
+                <div class="form-group full-width">
+                    <label for="product-description">Description:</label>
+                    <textarea id="product-description" rows="3"></textarea>
+                </div>
+
+                <button type="submit">Add Product</button>
+            </form>
+        </section>
+
+        <!-- Edit Product Form (hidden initially, shown on edit) -->
+        <section id="edit-product-section" style="display: none;">
+            <h2>Edit Product</h2>
+            <form id="edit-product-form">
+                <input type="hidden" id="edit-product-id">
+                <label for="edit-product-name">Name:</label>
+                <input type="text" id="edit-product-name" required>
+                <label for="edit-product-price">Price:</label>
+                <input type="number" id="edit-product-price" step="0.01" required>
+                <label for="edit-product-stock">Stock Quantity:</label>
+                <input type="number" id="edit-product-stock" required>
+                <button type="submit">Update Product</button>
+                <button type="button" id="cancel-edit" class="btn-secondary">Cancel</button>
+            </form>
+        </section>
+
+        <!-- Create Sale Form -->
+        <section>
+            <h2>Create Sale</h2>
+            <form id="create-sale-form">
+                <label for="sale-customer-id">Customer ID (optional):</label>
+                <input type="number" id="sale-customer-id">
+                <div id="sale-items">
+                    <div class="sale-item">
+                        <label>Product ID:</label>
+                        <input type="number" class="sale-product-id" required>
+                        <label>Quantity:</label>
+                        <input type="number" class="sale-quantity" required>
+                        <label>Price (optional, uses product price):</label>
+                        <input type="number" class="sale-price" step="0.01">
+                        <button type="button" class="remove-item btn-danger">Remove</button>
+                    </div>
+                </div>
+                <button type="button" id="add-sale-item" class="btn-secondary">Add Item</button>
+                <button type="submit">Create Sale</button>
+            </form>
+        </section>
+
+        <section>
+            <h2>Product Inventory</h2>
+            <div id="inventory-display">
+                <!-- Inventory components and data will be rendered here by renderer.js -->
+                <table id="products-table" class="data-table">
+                    <thead>
+                        <tr>
+                            <th>SKU</th>
+                            <th>Name</th>
+                            <th>Category</th>
+                            <th>Price</th>
+                            <th>Stock</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="products-tbody">
+                        <tr><td colspan="6" class="loading">Loading inventory data...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </div>
+
+    <!-- Customer Management Section -->
+    <div id="customers-section" style="display: none;">
+        <section>
+            <h2>Add New Customer</h2>
+            <form id="add-customer-form">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="customer-name">Full Name:</label>
+                        <input type="text" id="customer-name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="customer-email">Email:</label>
+                        <input type="email" id="customer-email">
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="customer-phone">Phone:</label>
+                        <input type="tel" id="customer-phone">
+                    </div>
+                    <div class="form-group">
+                        <label for="customer-city">City:</label>
+                        <input type="text" id="customer-city">
+                    </div>
+                </div>
+
+                <div class="form-group full-width">
+                    <label for="customer-address">Address:</label>
+                    <textarea id="customer-address" rows="2"></textarea>
+                </div>
+
+                <button type="submit">Add Customer</button>
+            </form>
+        </section>
+
+        <section>
+            <h2>Customer List</h2>
+            <div id="customers-display">
+                <table id="customers-table" class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Phone</th>
+                            <th>City</th>
+                            <th>Loyalty Points</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="customers-tbody">
+                        <tr><td colspan="6" class="loading">Loading customers...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </div>
+
+    <!-- Supplier Management Section -->
+    <div id="suppliers-section" style="display: none;">
+        <section>
+            <h2>Add New Supplier</h2>
+            <form id="add-supplier-form">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="supplier-name">Company Name:</label>
+                        <input type="text" id="supplier-name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="supplier-contact-person">Contact Person:</label>
+                        <input type="text" id="supplier-contact-person">
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="supplier-email">Email:</label>
+                        <input type="email" id="supplier-email">
+                    </div>
+                    <div class="form-group">
+                        <label for="supplier-phone">Phone:</label>
+                        <input type="tel" id="supplier-phone">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="supplier-city">City:</label>
+                        <input type="text" id="supplier-city">
+                    </div>
+                    <div class="form-group">
+                        <label for="supplier-country">Country:</label>
+                        <input type="text" id="supplier-country">
+                    </div>
+                </div>
+
+                <div class="form-group full-width">
+                    <label for="supplier-address">Address:</label>
+                    <textarea id="supplier-address" rows="2"></textarea>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="supplier-payment-terms">Payment Terms:</label>
+                        <select id="supplier-payment-terms">
+                            <option value="">Select Terms</option>
+                            <option value="net-30">Net 30</option>
+                            <option value="net-60">Net 60</option>
+                            <option value="cod">Cash on Delivery</option>
+                            <option value="prepaid">Prepaid</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="supplier-notes">Notes:</label>
+                        <textarea id="supplier-notes" rows="3"></textarea>
+                    </div>
+                </div>
+
+                <button type="submit">Add Supplier</button>
+            </form>
+        </section>
+
+        <section>
+            <h2>Supplier List</h2>
+            <div id="suppliers-display">
+                <table id="suppliers-table" class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Company Name</th>
+                            <th>Contact Person</th>
+                            <th>Email</th>
+                            <th>Phone</th>
+                            <th>City</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="suppliers-tbody">
+                        <tr><td colspan="6" class="loading">Loading suppliers...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </div>
+
+    <!-- Point of Sale Section -->
+    <div id="pos-section" style="display: none;">
+        <section>
+            <h2>Point of Sale Terminal</h2>
+            
+            <!-- Barcode Scanner -->
+            <div class="pos-scanner">
+                <h3>Barcode Scanner</h3>
+                <div class="scanner-controls">
+                    <input type="text" id="barcode-input" placeholder="Scan barcode or enter manually" autofocus>
+                    <button id="camera-scan-btn" class="btn-secondary">📷 Camera Scan</button>
+                </div>
+                <div id="camera-scanner" style="display: none;">
+                    <div id="qr-reader" style="width: 300px; height: 200px; margin: 10px auto;"></div>
+                    <button id="stop-camera-btn" class="btn-danger">Stop Camera</button>
+                </div>
+            </div>
+
+            <!-- Current Sale -->
+            <div class="current-sale">
+                <h3>Current Sale</h3>
+                
+                <!-- Customer Selection -->
+                <div class="customer-selection">
+                    <label for="sale-customer-select">Customer (Optional):</label>
+                    <select id="sale-customer-select">
+                        <option value="">Walk-in Customer</option>
+                    </select>
+                    <button id="add-customer-quick-btn" class="btn-secondary">+ New Customer</button>
+                </div>
+
+                <!-- Sale Items -->
+                <div id="sale-items-list">
+                    <div class="sale-header">
+                        <span>Product</span>
+                        <span>Qty</span>
+                        <span>Price</span>
+                        <span>Total</span>
+                        <span>Action</span>
+                    </div>
+                </div>
+
+                <!-- Sale Totals -->
+                <div class="sale-totals">
+                    <div class="total-row">
+                        <span>Subtotal:</span>
+                        <span id="sale-subtotal">$0.00</span>
+                    </div>
+                    <div class="total-row">
+                        <span>Tax (<span id="tax-rate">0</span>%):</span>
+                        <span id="sale-tax">$0.00</span>
+                    </div>
+                    <div class="total-row">
+                        <span>Discount:</span>
+                        <span id="sale-discount">$0.00</span>
+                    </div>
+                    <div class="total-row grand-total">
+                        <span>TOTAL:</span>
+                        <span id="sale-total">$0.00</span>
+                    </div>
+                </div>
+
+                <!-- Payment -->
+                <div class="payment-section">
+                    <h4>Payment</h4>
+                    <div class="payment-methods">
+                        <label class="payment-method">
+                            <input type="radio" name="payment-method" value="cash" checked>
+                            <span>💵 Cash</span>
+                        </label>
+                        <label class="payment-method">
+                            <input type="radio" name="payment-method" value="card">
+                            <span>💳 Card</span>
+                        </label>
+                        <label class="payment-method">
+                            <input type="radio" name="payment-method" value="digital">
+                            <span>📱 Digital</span>
+                        </label>
+                    </div>
+                    
+                    <div class="payment-controls">
+                        <button id="complete-sale-btn" class="btn-primary" disabled>Complete Sale</button>
+                        <button id="clear-sale-btn" class="btn-secondary">Clear Sale</button>
+                        <button id="print-receipt-btn" class="btn-secondary" style="display: none;">Print Receipt</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Reports Section -->
+    <div id="reports-section" style="display: none;">
+        <section>
+            <h2>Analytics Dashboard</h2>
+            
+            <!-- Key Metrics Cards -->
+            <div class="metrics-grid">
+                <div class="metric-card">
+                    <h3>Total Products</h3>
+                    <div class="metric-value" id="total-products">-</div>
+                </div>
+                <div class="metric-card">
+                    <h3>Low Stock Items</h3>
+                    <div class="metric-value" id="low-stock-count">-</div>
+                </div>
+                <div class="metric-card">
+                    <h3>Total Sales (30d)</h3>
+                    <div class="metric-value" id="total-sales">-</div>
+                </div>
+                <div class="metric-card">
+                    <h3>Revenue (30d)</h3>
+                    <div class="metric-value" id="total-revenue">-</div>
+                </div>
+            </div>
+        </section>
+
+        <section>
+            <h2>Charts & Analytics</h2>
+            <div class="charts-grid">
+                <div class="chart-container">
+                    <h3>Top Selling Products</h3>
+                    <canvas id="top-products-chart"></canvas>
+                </div>
+                <div class="chart-container">
+                    <h3>Sales Trend (Last 30 Days)</h3>
+                    <canvas id="sales-trend-chart"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <section>
+            <h2>Low Stock Alert</h2>
+            <div id="low-stock-display">
+                <p class="loading">Loading low stock items...</p>
+            </div>
+        </section>
+
+        <section>
+            <h2>Recent Sales</h2>
+            <div id="recent-sales-display">
+                <p class="loading">Loading recent sales...</p>
+            </div>
+        </section>
+    </div>
+
+    <!-- Advanced Features Section -->
+    <div id="advanced-section" style="display: none;">
+        <section>
+            <h2>Export & Import</h2>
+            <div class="export-import-grid">
+                <div class="export-card">
+                    <h3>📊 Export Data</h3>
+                    <div class="export-controls">
+                        <button id="export-products-btn" class="btn-primary">Export Products (CSV)</button>
+                        <button id="export-sales-btn" class="btn-primary">Export Sales (CSV)</button>
+                        <div class="date-range">
+                            <label>Sales Date Range:</label>
+                            <input type="date" id="export-start-date">
+                            <input type="date" id="export-end-date">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="import-card">
+                    <h3>📥 Import Data</h3>
+                    <div class="import-controls">
+                        <button id="import-products-btn" class="btn-secondary">Import Products (CSV)</button>
+                        <div class="import-status" id="import-status" style="display: none;"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section>
+            <h2>Profit Analysis</h2>
+            <div class="analysis-controls">
+                <div class="date-range">
+                    <label>Analysis Period:</label>
+                    <input type="date" id="analysis-start-date">
+                    <input type="date" id="analysis-end-date">
+                    <button id="generate-profit-analysis-btn" class="btn-primary">Generate Analysis</button>
+                </div>
+            </div>
+            
+            <div class="analysis-tabs">
+                <button id="product-profit-tab" class="analysis-tab active">Product Profit</button>
+                <button id="category-profit-tab" class="analysis-tab">Category Profit</button>
+                <button id="inventory-turnover-tab" class="analysis-tab">Inventory Turnover</button>
+                <button id="reorder-analysis-tab" class="analysis-tab">Reorder Analysis</button>
+            </div>
+
+            <div class="analysis-display">
+                <div id="product-profit-analysis" class="analysis-content">
+                    <div class="analysis-header">
+                        <h3>Product Profit Analysis</h3>
+                        <button id="export-profit-pdf-btn" class="btn-secondary">Export PDF</button>
+                    </div>
+                    <div id="product-profit-table">
+                        <p class="loading">Click "Generate Analysis" to view profit data</p>
+                    </div>
+                </div>
+
+                <div id="category-profit-analysis" class="analysis-content" style="display: none;">
+                    <div class="analysis-header">
+                        <h3>Category Profit Analysis</h3>
+                        <button id="export-category-pdf-btn" class="btn-secondary">Export PDF</button>
+                    </div>
+                    <div id="category-profit-table">
+                        <p class="loading">Click "Generate Analysis" to view category data</p>
+                    </div>
+                </div>
+
+                <div id="inventory-turnover-analysis" class="analysis-content" style="display: none;">
+                    <div class="analysis-header">
+                        <h3>Inventory Turnover Analysis</h3>
+                        <button id="export-turnover-pdf-btn" class="btn-secondary">Export PDF</button>
+                    </div>
+                    <div id="inventory-turnover-table">
+                        <p class="loading">Loading turnover data...</p>
+                    </div>
+                </div>
+
+                <div id="reorder-analysis-content" class="analysis-content" style="display: none;">
+                    <div class="analysis-header">
+                        <h3>Reorder Point Analysis</h3>
+                        <button id="export-reorder-pdf-btn" class="btn-secondary">Export PDF</button>
+                    </div>
+                    <div id="reorder-analysis-table">
+                        <p class="loading">Loading reorder analysis...</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+    </div>
+    <script src="./renderer.js"></script>
+</body>
+</html>

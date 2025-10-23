@@ -1,0 +1,824 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enhanced Electronics Store Inventory</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .app-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .app-title {
+            font-size: 2rem;
+            font-weight: 700;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+
+        .location-selector {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .location-selector select {
+            padding: 8px 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            background: white;
+        }
+
+        .reorder-alerts-badge {
+            position: relative;
+        }
+
+        #reorder-badge {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: #dc3545;
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+
+        .nav-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .nav-tab {
+            padding: 12px 24px;
+            background: rgba(255, 255, 255, 0.8);
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .nav-tab.active {
+            background: white;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .tab-content {
+            display: none;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .inventory-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .product-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
+            border-left: 4px solid #28a745;
+        }
+
+        .product-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        }
+
+        .product-card.low-stock {
+            border-left-color: #ffc107;
+        }
+
+        .product-card.critical-stock {
+            border-left-color: #dc3545;
+        }
+
+        .product-header {
+            margin-bottom: 15px;
+        }
+
+        .product-name {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .product-sku {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .product-details {
+            margin-bottom: 15px;
+        }
+
+        .price-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+
+        .price {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #28a745;
+        }
+
+        .cost {
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        .stock-info {
+            margin-bottom: 10px;
+        }
+
+        .stock-main {
+            font-size: 1rem;
+            margin-bottom: 5px;
+        }
+
+        .reserved {
+            font-size: 0.9rem;
+            color: #ffc107;
+        }
+
+        .stock-available, .reorder-level {
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        .tracking-info {
+            margin-top: 10px;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 8px;
+            background: #17a2b8;
+            color: white;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            margin-right: 5px;
+        }
+
+        .product-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .btn-primary, .btn-secondary, .btn-success, .btn-danger {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+
+        .btn-primary:hover, .btn-secondary:hover, .btn-success:hover, .btn-danger:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal.large .modal-content {
+            max-width: 800px;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #666;
+        }
+
+        .modal-body {
+            padding: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 20px;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .tab-button {
+            padding: 10px 20px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-weight: 500;
+            border-bottom: 2px solid transparent;
+        }
+
+        .tab-button.active {
+            border-bottom-color: #667eea;
+            color: #667eea;
+        }
+
+        .reorder-alerts-list {
+            display: grid;
+            gap: 15px;
+        }
+
+        .reorder-alert-item {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 8px;
+            padding: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .alert-info h4 {
+            margin-bottom: 10px;
+            color: #856404;
+        }
+
+        .alert-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .batch-serial-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 15px;
+        }
+
+        .batch-serial-item {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+            border-left: 4px solid #28a745;
+        }
+
+        .batch-serial-item.sold {
+            border-left-color: #dc3545;
+            background: #f8d7da;
+        }
+
+        .status-badge {
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+
+        .status-badge.available {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-badge.sold {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .empty-state, .loading, .error, .success {
+            text-align: center;
+            padding: 40px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+
+        .empty-state {
+            background: #f8f9fa;
+            color: #666;
+        }
+
+        .loading {
+            background: #e3f2fd;
+            color: #1976d2;
+        }
+
+        .error {
+            background: #ffebee;
+            color: #c62828;
+        }
+
+        .success {
+            background: #e8f5e8;
+            color: #2e7d32;
+        }
+
+        .location-info {
+            background: #e3f2fd;
+            padding: 10px 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            color: #1976d2;
+        }
+
+        .current-stock-info {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+
+        .notification {
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .login-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .login-form {
+            background: white;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .login-form h2 {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #333;
+        }
+
+        @media (max-width: 768px) {
+            .inventory-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .header-top {
+                flex-direction: column;
+                gap: 15px;
+            }
+            
+            .user-info {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <div class="header">
+            <div class="header-top">
+                <h1 class="app-title">Enhanced Electronics Store</h1>
+                <div class="user-info">
+                    <div class="user-avatar" id="user-avatar">U</div>
+                    <div>
+                        <div id="user-name">Loading...</div>
+                        <div id="user-role" style="font-size: 0.9rem; color: #666;"></div>
+                    </div>
+                    <button onclick="AuthManager.logout()" class="btn-secondary">Logout</button>
+                </div>
+            </div>
+            
+            <div class="location-selector" id="location-selector">
+                <label>Location:</label>
+                <select id="current-location">
+                    <option value="">Loading locations...</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="nav-tabs">
+            <button class="nav-tab active" onclick="switchTab('inventory')">
+                📦 Inventory Management
+            </button>
+            <button class="nav-tab" onclick="switchTab('reorder')">
+                <div class="reorder-alerts-badge">
+                    🔔 Reorder Alerts
+                    <span id="reorder-badge" style="display: none;">0</span>
+                </div>
+            </button>
+            <button class="nav-tab" onclick="switchTab('reports')">
+                📊 Reports & Analytics
+            </button>
+            <button class="nav-tab" onclick="switchTab('settings')">
+                ⚙️ Settings
+            </button>
+        </div>
+
+        <!-- Inventory Tab -->
+        <div id="inventory-tab" class="tab-content active">
+            <div class="section-header">
+                <h2>Inventory Management</h2>
+                <div class="section-actions">
+                    <button onclick="showAddProductModal()" class="btn-primary">
+                        ➕ Add New Product
+                    </button>
+                    <button onclick="InventoryManager.loadInventory()" class="btn-secondary">
+                        🔄 Refresh
+                    </button>
+                </div>
+            </div>
+            
+            <div id="inventory-display">
+                <div class="loading">Loading inventory data...</div>
+            </div>
+        </div>
+
+        <!-- Reorder Alerts Tab -->
+        <div id="reorder-tab" class="tab-content">
+            <div class="section-header">
+                <h2>Reorder Alerts</h2>
+                <button onclick="ReorderManager.loadReorderAlerts()" class="btn-secondary">
+                    🔄 Refresh Alerts
+                </button>
+            </div>
+            
+            <div id="reorder-alerts">
+                <div class="loading">Loading reorder alerts...</div>
+            </div>
+        </div>
+
+        <!-- Reports Tab -->
+        <div id="reports-tab" class="tab-content">
+            <div class="section-header">
+                <h2>Reports & Analytics</h2>
+            </div>
+            
+            <div class="reports-grid">
+                <div class="report-card">
+                    <h3>Sales Summary</h3>
+                    <div id="sales-summary">Loading...</div>
+                </div>
+                
+                <div class="report-card">
+                    <h3>Low Stock Items</h3>
+                    <div id="low-stock-report">Loading...</div>
+                </div>
+                
+                <div class="report-card">
+                    <h3>Top Products</h3>
+                    <div id="top-products-report">Loading...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Settings Tab -->
+        <div id="settings-tab" class="tab-content">
+            <div class="section-header">
+                <h2>Settings</h2>
+            </div>
+            
+            <div class="settings-sections">
+                <div class="settings-section">
+                    <h3>Location Management</h3>
+                    <button onclick="showAddLocationModal()" class="btn-primary">
+                        ➕ Add New Location
+                    </button>
+                </div>
+                
+                <div class="settings-section">
+                    <h3>User Management</h3>
+                    <button onclick="showUserManagement()" class="btn-primary">
+                        👥 Manage Users
+                    </button>
+                </div>
+                
+                <div class="settings-section">
+                    <h3>System Settings</h3>
+                    <button onclick="showSystemSettings()" class="btn-primary">
+                        ⚙️ System Configuration
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="enhanced-renderer.js"></script>
+    <script>
+        function switchTab(tabName) {
+            // Remove active class from all tabs and content
+            document.querySelectorAll('.nav-tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            
+            // Add active class to selected tab and content
+            event.target.classList.add('active');
+            document.getElementById(`${tabName}-tab`).classList.add('active');
+        }
+
+        function showAddProductModal() {
+            if (!AppState.currentLocation) {
+                NotificationManager.show('Please select a location first', 'warning');
+                return;
+            }
+            
+            const modal = document.createElement('div');
+            modal.className = 'modal';
+            modal.innerHTML = `
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3>Add New Product</h3>
+                        <button class="modal-close" onclick="this.closest('.modal').remove()">×</button>
+                    </div>
+                    
+                    <div class="modal-body">
+                        <form id="add-product-form">
+                            <div class="form-group">
+                                <label>Product Name *</label>
+                                <input type="text" id="product-name" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label>Description</label>
+                                <textarea id="product-description"></textarea>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label>SKU</label>
+                                <input type="text" id="product-sku">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label>Price *</label>
+                                <input type="number" id="product-price" step="0.01" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label>Cost</label>
+                                <input type="number" id="product-cost" step="0.01">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label>Reorder Level</label>
+                                <input type="number" id="reorder-level" value="10">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label>Reorder Quantity</label>
+                                <input type="number" id="reorder-quantity" value="50">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label>
+                                    <input type="checkbox" id="requires-serial"> Requires Serial Number Tracking
+                                </label>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label>
+                                    <input type="checkbox" id="requires-batch"> Requires Batch Number Tracking
+                                </label>
+                            </div>
+                            
+                            <div class="form-actions">
+                                <button type="submit" class="btn-primary">Add Product</button>
+                                <button type="button" class="btn-secondary" onclick="this.closest('.modal').remove()">Cancel</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+            
+            document.getElementById('add-product-form').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                await addNewProduct();
+            });
+        }
+
+        async function addNewProduct() {
+            const formData = {
+                name: document.getElementById('product-name').value,
+                description: document.getElementById('product-description').value,
+                sku: document.getElementById('product-sku').value,
+                price: parseFloat(document.getElementById('product-price').value),
+                cost: parseFloat(document.getElementById('product-cost').value) || null,
+                reorder_level: parseInt(document.getElementById('reorder-level').value),
+                reorder_quantity: parseInt(document.getElementById('reorder-quantity').value),
+                requires_serial: document.getElementById('requires-serial').checked,
+                requires_batch: document.getElementById('requires-batch').checked
+            };
+            
+            try {
+                const product = await APIClient.post('/products/', formData);
+                
+                // Add to current location with initial stock
+                await APIClient.post('/product-locations/', {
+                    product_id: product.product_id,
+                    location_id: AppState.currentLocation.location_id,
+                    stock_quantity: 0
+                });
+                
+                NotificationManager.show('Product added successfully!', 'success');
+                document.querySelector('.modal').remove();
+                await InventoryManager.loadInventory();
+                
+            } catch (error) {
+                NotificationManager.show(`Failed to add product: ${error.message}`, 'error');
+            }
+        }
+
+        function showAddLocationModal() {
+            // Implementation for adding new location
+            NotificationManager.show('Add location feature coming soon!', 'info');
+        }
+
+        function showUserManagement() {
+            // Implementation for user management
+            NotificationManager.show('User management feature coming soon!', 'info');
+        }
+
+        function showSystemSettings() {
+            // Implementation for system settings
+            NotificationManager.show('System settings feature coming soon!', 'info');
+        }
+
+        // Update user info display
+        function updateUserDisplay() {
+            if (AppState.currentUser) {
+                document.getElementById('user-name').textContent = AppState.currentUser.full_name;
+                document.getElementById('user-role').textContent = AppState.currentUser.role.toUpperCase();
+                document.getElementById('user-avatar').textContent = AppState.currentUser.full_name.charAt(0).toUpperCase();
+            }
+        }
+
+        // Call updateUserDisplay when user data is loaded
+        document.addEventListener('DOMContentLoaded', () => {
+            setTimeout(updateUserDisplay, 1000);
+        });
+    </script>
+</body>
+</html>
