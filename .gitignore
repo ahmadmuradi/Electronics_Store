@@ -1,0 +1,27 @@
+# Recreate .gitignore with correct content
+cat > .gitignore << EOF
+# Expo generated directories
+/android
+/ios
+
+# Expo files
+.expo/
+node_modules/
+
+# Build outputs
+dist/
+web-build/
+
+# Environment variables
+.env
+.env.local
+
+# OS files
+.DS_Store
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+EOF
+node_modules
